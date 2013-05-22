@@ -40,12 +40,12 @@ class ESelect2 extends CInputWidget
     public function init()
     {
         $this->defaultOptions = array(
-            'formatNoMatches' => 'js:function(){return "' . Yii::t('ESelect2.select2', 'No matches found') . '";}',
-            'formatInputTooShort' => 'js:function(input,min){return "' . Yii::t('ESelect2.select2', 'Please enter {chars} more characters', array('{chars}' => '"+(min-input.length)+"')) . '";}',
-			'formatInputTooLong' => 'js:function(input,max){return "' . Yii::t('ESelect2.select2', 'Please enter {chars} less characters', array('{chars}' => '"+(input.length-max)+"')) . '";}',
-            'formatSelectionTooBig' => 'js:function(limit){return "' . Yii::t('ESelect2.select2', 'You can only select {count} items', array('{count}' => '"+limit+"')) . '";}',
-            'formatLoadMore' => 'js:function(pageNumber){return "' . Yii::t('ESelect2.select2', 'Loading more results...') . '";}',
-            'formatSearching' => 'js:function(){return "' . Yii::t('ESelect2.select2', 'Searching...') . '";}',
+            'formatNoMatches' => 'js:s2helper.noMatches',
+            'formatInputTooShort' => 'js:s2helper.inputTooShort',
+			'formatInputTooLong' => 'js:s2helper.inputTooLong',
+            'formatSelectionTooBig' => 'js:s2helper.selectionTooBig',
+            'formatLoadMore' => 'js:s2helper.loadMore',
+            'formatSearching' => 'js:s2helper.searching',
         );
     }
 
@@ -66,11 +66,40 @@ class ESelect2 extends CInputWidget
             }
 
             if ($this->hasModel()) {
-                echo CHtml::activeDropDownList($this->model, $this->attribute, $this->data, $this->htmlOptions);
+                if (isset($this->options['ajax'])) {
+                    if (!isset($this->htmlOptions['value'])) {
+                        $value = CHtml::resolveValue($this->model, $this->attribute);
+                        $values = array();
+                        if ($this->model instanceof CActiveRecord) {
+                            $relations = $this->model->relations();
+                            if (isset($relations[$this->attribute])
+                                && $relations[$this->attribute][0] != CActiveRecord::BELONGS_TO
+                                && $relations[$this->attribute][0] != CActiveRecord::HAS_ONE)
+                            {
+                                foreach($value as $object) {
+                                    $values[] = $object->getPrimaryKey();
+                                }
+                                $this->htmlOptions['value'] = implode(',', $values);
+                            }
+                        } else if (is_array($value)) {
+                            foreach($value as $object) {
+                                $values[] = is_object($object) ? $object->__toString() : $object;
+                            }
+                            $this->htmlOptions['value'] = implode(',', $values);
+                        }
+                    }
+                    echo CHtml::activeTextField($this->model,$this->attribute,$this->htmlOptions);
+                } else {
+                    echo CHtml::activeDropDownList($this->model,$this->attribute,$this->data,$this->htmlOptions);
+                }
             } else {
                 $this->htmlOptions['id'] = $this->id;
-                echo CHtml::dropDownList($this->name, $this->value, $this->data, $this->htmlOptions);
-            }
+                if (isset($this->options['ajax'])) {
+                    echo CHtml::textField($this->name,$this->value,$this->htmlOptions);
+                } else {
+                    echo CHtml::dropDownList($this->name,$this->value,$this->data,$this->htmlOptions);
+                }
+            }  
         }
 
         $bu = Yii::app()->assetManager->publish(dirname(__FILE__) . '/assets/');
@@ -103,7 +132,25 @@ JavaScript;
 		}
 
         $cs->registerScript(__CLASS__ . '#' . $this->id, ob_get_clean());
-        
+        $strings = array(
+            'noMatches' => Yii::t('ESelect2.select2','No matches found'),
+            'inputTooShort' => Yii::t('ESelect2.select2','Please enter {chars} more characters', array('{chars}'=>'"+(min-input.length)+"')),
+			'inputTooLong' => Yii::t('ESelect2.select2','Please enter {chars} less characters', array('{chars}'=>'"+(input.length-max)+"')),
+            'selectionTooBig' => Yii::t('ESelect2.select2','You can only select {count} items', array('{count}'=>'"+limit+"')),
+            'loadMore' => Yii::t('ESelect2.select2','Loading more results...'),
+            'searching' => Yii::t('ESelect2.select2','Searching...'),
+        );
+        $script = <<<JavaScript
+(function( s2helper, $, undefined ) {
+    s2helper.noMatches = function(){return "{$strings['noMatches']}";}
+    s2helper.inputTooShort = function(input,min){return "{$strings['inputTooShort']}";}
+    s2helper.inputTooLong = function(input,max){return "{$strings['inputTooShort']}";}
+    s2helper.selectionTooBig = function(limit){return "{$strings['selectionTooBig']}";}
+    s2helper.loadMore = function(pageNumber){return "{$strings['loadMore']}";}
+    s2helper.searching = function(){return "{$strings['searching']}";}
+}( window.s2helper = window.s2helper || {}, jQuery ));
+JavaScript;
+        $cs->registerScript(__CLASS__, $script, CClientScript::POS_END);
     }
 
 }

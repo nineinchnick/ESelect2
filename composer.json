@@ -1,0 +1,13 @@
+{
+    "name": "nineinchnick/select2",
+    "description": "Wrapper for ivaynberg jQuery select2",
+    "authors": [
+        {
+            "name": "Anggiajuang Patria",
+            "homepage": "http://anggiaj.herokuapp.com/"
+        }
+    ],
+    "require": {
+
+    }
+}
