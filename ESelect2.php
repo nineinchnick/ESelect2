@@ -53,7 +53,7 @@ class ESelect2 extends CInputWidget
         $bu = Yii::app()->assetManager->publish(dirname(__FILE__) . '/assets/');
         $cs = Yii::app()->clientScript;
         $cs->registerCssFile($bu . '/select2.css');
-        $cs->registerScriptFile($bu . '/select2.js');
+        $cs->registerScriptFile($bu . '/select2'.(YII_DEBUG ? '' : '.min').'.js');
 
         $strings = array(
             'noMatches' => Yii::t('ESelect2.select2','No matches found'),
