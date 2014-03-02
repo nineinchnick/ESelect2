@@ -1,7 +1,6 @@
 {
     "name": "nineinchnick/select2",
     "description": "Wrapper for ivaynberg jQuery select2",
-	"version": "1.0",
     "authors": [
         {
             "name": "Anggiajuang Patria",
