@@ -105,16 +105,15 @@ JavaScript;
             }
 
             if ($this->hasModel()) {
+                $attribute = $this->attribute;
+                CHtml::resolveName($this->model,$attribute); // strip off square brackets if any
                 if (isset($this->options['ajax'])) {
                     if (!isset($this->htmlOptions['value'])) {
                         $value = CHtml::resolveValue($this->model, $this->attribute);
                         $values = array();
                         if ($this->model instanceof CActiveRecord) {
                             $relations = $this->model->relations();
-                            if (isset($relations[$this->attribute])
-                                && $relations[$this->attribute][0] != CActiveRecord::BELONGS_TO
-                                && $relations[$this->attribute][0] != CActiveRecord::HAS_ONE)
-                            {
+                            if (isset($relations[$attribute]) && $relations[$attribute][0] != CActiveRecord::BELONGS_TO && $relations[$attribute][0] != CActiveRecord::HAS_ONE) {
                                 foreach($value as $object) {
                                     $values[] = $object->getPrimaryKey();
                                 }
@@ -122,21 +121,21 @@ JavaScript;
                             }
                         } else if (is_array($value)) {
                             foreach($value as $object) {
-                                $values[] = is_object($object) ? $object->__toString() : $object;
+                                $values[] = (string)$object;
                             }
                             $this->htmlOptions['value'] = implode(',', $values);
                         }
                     }
-                    echo CHtml::activeTextField($this->model,$this->attribute,$this->htmlOptions);
+                    echo CHtml::activeTextField($this->model, $this->attribute, $this->htmlOptions);
                 } else {
-                    echo CHtml::activeDropDownList($this->model,$this->attribute,$this->data,$this->htmlOptions);
+                    echo CHtml::activeDropDownList($this->model, $this->attribute, $this->data, $this->htmlOptions);
                 }
             } else {
                 $this->htmlOptions['id'] = $this->id;
                 if (isset($this->options['ajax'])) {
-                    echo CHtml::textField($this->name,$this->value,$this->htmlOptions);
+                    echo CHtml::textField($this->name, $this->value, $this->htmlOptions);
                 } else {
-                    echo CHtml::dropDownList($this->name,$this->value,$this->data,$this->htmlOptions);
+                    echo CHtml::dropDownList($this->name, $this->value, $this->data, $this->htmlOptions);
                 }
             }  
         }
